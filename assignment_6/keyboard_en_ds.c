@@ -10,11 +10,16 @@ int ticks;
 
 #define KBD_DATA_REG        0x60   
 #define KBD_CONTROL_REG        0x64 
+#define DELAY do { mdelay(1); if (++delay > 10) break; } while(0)
 
 void mytimer_function(struct timer_list *ptimer)
 {
 	printk(KERN_INFO " %s : mytimer_function./n", THIS_MODULE->name);
 	mod_timer(&mytimer, jiffies + ticks);
+	
+	long delay = 0;
+	while (inb(KBD_CONTROL_REG) & 0x02)
+	DELAY;
 	outb(0xAE, KBD_CONTROL_REG);
 	printk(KERN_INFO "%s : keyboard disabled.\n", THIS_MODULE->name);
 }
@@ -29,7 +34,10 @@ static __init int desd_init(void)
 	add_timer(&mytimer);
 
 	printk(KERN_INFO " %s : Timer initialisation is done successfully\n", THIS_MODULE->name);
-
+	
+	long delay = 0;
+	while (inb(KBD_CONTROL_REG) & 0x02)
+		DELAY;
 	outb(0xAD, KBD_CONTROL_REG);
 	printk(KERN_INFO "%s : keyboard enabled.\n",THIS_MODULE->name);
 
